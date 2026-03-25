@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import GhokuBrain from '@/components/ghoku/GhokuBrain';
+import GhOSTfaceBrain from '@/components/ghostface/GhOSTfaceBrain';
 
 export default function Home() {
   const [launched, setLaunched] = useState(false);
@@ -9,7 +9,7 @@ export default function Home() {
   if (launched) {
     return (
       <div className="min-h-screen bg-bg">
-        <GhokuBrain />
+        <GhOSTfaceBrain />
       </div>
     );
   }

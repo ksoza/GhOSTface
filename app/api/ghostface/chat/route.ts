@@ -1,4 +1,4 @@
-// app/api/ghoku/chat/route.ts
+// app/api/ghostface/chat/route.ts
 // GhOSTface AGI Chat — Autonomous agent with tools, planning, and memory
 import { NextRequest, NextResponse } from 'next/server';
 import { runGhostfaceAgent, createDefaultMemory } from '@/lib/agents/ghostface-agent';

@@ -19,8 +19,8 @@ AI-powered code intelligence with HuggingFace integration, neural interface, and
 ## 🚀 Getting Started
 
 ```bash
-git clone https://github.com/ksoza/ghoku.git
-cd ghoku
+git clone https://github.com/ksoza/ghostface.git
+cd ghostface
 npm install
 cp .env.example .env.local
 # Fill in your API keys in .env.local

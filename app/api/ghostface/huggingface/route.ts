@@ -1,4 +1,4 @@
-// app/api/ghoku/huggingface/route.ts
+// app/api/ghostface/huggingface/route.ts
 // Gh.O.K.U. — HuggingFace Integration: Model Search + Inference
 import { NextRequest, NextResponse } from 'next/server';
 

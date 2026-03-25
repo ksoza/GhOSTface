@@ -1,5 +1,5 @@
 'use client';
-// components/ghoku/GhokuBrain.tsx
+// components/ghostface/GhOSTfaceBrain.tsx
 // Gh.O.K.U. — GitHub Oracle Kinetic Unit
 // A living GitHub brain that searches, scans, and synthesizes repos in real time
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -45,7 +45,7 @@ interface MemoryState {
   lastUpdated: string;
 }
 
-type GhokuTab = 'search' | 'intel' | 'chat' | 'brain' | 'models' | 'neural' | 'memory';
+type GhOSTfaceTab = 'search' | 'intel' | 'chat' | 'brain' | 'models' | 'neural' | 'memory';
 
 const HF_TASKS = [
   { id: '', label: 'All', icon: '🌐' },
@@ -81,7 +81,7 @@ function timeAgo(date: string): string {
 function loadMemory(): MemoryState {
   if (typeof window === 'undefined') return defaultMemory();
   try {
-    const stored = localStorage.getItem('ghoku_memory');
+    const stored = localStorage.getItem('ghostface_memory');
     return stored ? JSON.parse(stored) : defaultMemory();
   } catch {
     return defaultMemory();
@@ -90,7 +90,7 @@ function loadMemory(): MemoryState {
 
 function saveMemory(memory: MemoryState) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('ghoku_memory', JSON.stringify({ ...memory, lastUpdated: new Date().toISOString() }));
+  localStorage.setItem('ghostface_memory', JSON.stringify({ ...memory, lastUpdated: new Date().toISOString() }));
 }
 
 function defaultMemory(): MemoryState {
@@ -106,8 +106,8 @@ function defaultMemory(): MemoryState {
 }
 
 // ── Component ───────────────────────────────────────────────────
-export function GhokuBrain() {
-  const [tab, setTab] = useState<GhokuTab>('search');
+export function GhOSTfaceBrain() {
+  const [tab, setTab] = useState<GhOSTfaceTab>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -217,7 +217,7 @@ export function GhokuBrain() {
   const autoBrief = async (repo: Repo, languages: Record<string, number>, readme: string) => {
     setChatLoading(true);
     try {
-      const resp = await fetch('/api/ghoku/chat', {
+      const resp = await fetch('/api/ghostface/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -248,7 +248,7 @@ export function GhokuBrain() {
     setChatLoading(true);
 
     try {
-      const resp = await fetch('/api/ghoku/chat', {
+      const resp = await fetch('/api/ghostface/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -275,7 +275,7 @@ export function GhokuBrain() {
     setTab('chat');
 
     try {
-      const resp = await fetch('/api/ghoku/chat', {
+      const resp = await fetch('/api/ghostface/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -314,7 +314,7 @@ export function GhokuBrain() {
     setHfLoading(true);
     setHfError('');
     try {
-      const resp = await fetch('/api/ghoku/huggingface', {
+      const resp = await fetch('/api/ghostface/huggingface', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'search', query: query || hfQuery, task: hfTask || undefined }),
@@ -330,7 +330,7 @@ export function GhokuBrain() {
     setHfLoading(true);
     setHfError('');
     try {
-      const resp = await fetch('/api/ghoku/huggingface', {
+      const resp = await fetch('/api/ghostface/huggingface', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'trending', task: task || hfTask || undefined }),
@@ -348,7 +348,7 @@ export function GhokuBrain() {
     setHfResult(null);
     setHfError('');
     try {
-      const resp = await fetch('/api/ghoku/huggingface', {
+      const resp = await fetch('/api/ghostface/huggingface', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'inference', modelId: hfSelected, inputs: hfPlayground }),
@@ -377,7 +377,7 @@ export function GhokuBrain() {
   ];
 
   // ── Tab definitions ─────────────────────────────────
-  const TABS: { id: GhokuTab; icon: string; label: string }[] = [
+  const TABS: { id: GhOSTfaceTab; icon: string; label: string }[] = [
     { id: 'search', icon: '🔍', label: 'Search' },
     { id: 'intel',  icon: '📊', label: 'Intel' },
     { id: 'chat',   icon: '🧠', label: 'Oracle' },
@@ -1040,7 +1040,7 @@ export function GhokuBrain() {
               <ol className="text-xs text-muted mt-2 space-y-1 list-decimal list-inside">
                 <li>Apply at <span className="text-cyan">finalspark.com/neuroplatform</span></li>
                 <li>Set your API token in the environment</li>
-                <li>Deploy the harvester proxy (<span className="font-mono text-muted2">python ghoku_harvester.py</span>)</li>
+                <li>Deploy the harvester proxy (<span className="font-mono text-muted2">python ghostface_harvester.py</span>)</li>
                 <li>Click CONNECT — simulation flips to live organoids</li>
               </ol>
             </div>
