@@ -1,59 +1,83 @@
 // app/api/ghoku/chat/route.ts
-// Gh.O.K.U. Oracle Chat — AI-powered repo analysis and code generation
+// GhOSTface AGI Chat — Autonomous agent with tools, planning, and memory
 import { NextRequest, NextResponse } from 'next/server';
+import { runGhostfaceAgent, createDefaultMemory } from '@/lib/agents/ghostface-agent';
+import type { AgentMessage } from '@/lib/agents/types';
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, repo, context, memory, history } = await req.json();
+    const {
+      message,
+      repo,
+      context,
+      memory,
+      history,
+      mode = 'agent', // 'agent' | 'simple'
+    } = await req.json();
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { response: '⚠️ ANTHROPIC_API_KEY not configured. Set it in Vercel environment variables.' },
-        { status: 200 }
-      );
+    if (!message) {
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    // Build system prompt based on context
-    let systemPrompt = `You are Gh.O.K.U. (GitHub Oracle Kinetic Unit) — an AI brain that searches, scans, and synthesizes GitHub repos in real time. You provide deep technical analysis, working code, and actionable insights.
-
-Style: Be concise but thorough. Use code blocks with language tags. Be opinionated about best practices. When generating code, make it WORKING and copy-paste ready — no placeholders, no "fill this in" comments.`;
-
-    if (repo) {
-      systemPrompt += `\n\nCurrently loaded repo: ${repo.full_name}
-Description: ${repo.description}
-Stars: ${repo.stars} | Forks: ${repo.forks} | Issues: ${repo.issues}
-Primary language: ${repo.language}
-Languages: ${JSON.stringify(repo.languages)}
-Topics: ${repo.topics?.join(', ')}
-License: ${repo.license}
-Contributors: ${repo.contributors?.map((c: any) => c.login).join(', ')}
-README (first 2000 chars): ${repo.readme?.slice(0, 2000)}`;
-    }
-
-    if (context) {
-      systemPrompt += `\n\nUser's project context/code:\n${context}`;
-    }
-
-    if (memory?.operator) {
-      systemPrompt += `\n\nOperator: ${memory.operator}`;
-      if (memory.stack?.length) systemPrompt += `\nStack: ${memory.stack.join(', ')}`;
-      if (memory.languages?.length) systemPrompt += `\nLanguages: ${memory.languages.join(', ')}`;
-      if (memory.apis?.length) systemPrompt += `\nAPIs: ${memory.apis.join(', ')}`;
-      if (memory.projects?.length) systemPrompt += `\nProjects: ${memory.projects.join(', ')}`;
-    }
-
-    // Build message history
-    const messages = [];
+    // Build history
+    const agentHistory: AgentMessage[] = [];
     if (history && Array.isArray(history)) {
-      for (const h of history.slice(-8)) {
-        if (h.role === 'user') {
-          messages.push({ role: 'user', content: h.content });
-        } else if (h.role === 'assistant') {
-          messages.push({ role: 'assistant', content: h.content });
+      for (const h of history.slice(-10)) {
+        if (h.role === 'user' || h.role === 'assistant') {
+          agentHistory.push({ role: h.role, content: h.content });
         }
       }
     }
+
+    // ── Agent Mode (default) — Full AGI agent ─────────────────
+    if (mode === 'agent') {
+      const agentMemory = memory
+        ? { ...createDefaultMemory(), ...memory }
+        : createDefaultMemory();
+
+      const result = await runGhostfaceAgent(
+        message,
+        agentHistory,
+        { repo, memory, code: context },
+        agentMemory,
+      );
+
+      return NextResponse.json({
+        response: result.response,
+        toolsUsed: result.toolsUsed,
+        memory: result.memory,
+        suggestedActions: result.suggestedActions,
+        mode: 'agent',
+      });
+    }
+
+    // ── Simple Mode — Direct API call, no tools ───────────────
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { response: '⚠️ ANTHROPIC_API_KEY not configured. Set it in environment variables.' },
+        { status: 200 },
+      );
+    }
+
+    let systemPrompt = `You are GhOSTface (Generative Heuristic Orchestration System — Transformative Face Engine) — an AI brain that searches, scans, and synthesizes GitHub repos in real time.
+
+Style: Be concise but thorough. Use code blocks with language tags. Be opinionated. Generate WORKING, copy-paste ready code.`;
+
+    if (repo) {
+      systemPrompt += `\n\nLoaded repo: ${repo.full_name}\nDescription: ${repo.description}\nLanguage: ${repo.language}`;
+      if (repo.readme) systemPrompt += `\nREADME: ${repo.readme.slice(0, 2000)}`;
+    }
+    if (context) systemPrompt += `\n\nUser's code:\n${context.slice(0, 3000)}`;
+    if (memory?.operator) {
+      systemPrompt += `\n\nOperator: ${memory.operator}`;
+      if (memory.stack?.length) systemPrompt += `\nStack: ${memory.stack.join(', ')}`;
+    }
+
+    const messages = agentHistory.map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }));
     messages.push({ role: 'user', content: message });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -72,23 +96,21 @@ README (first 2000 chars): ${repo.readme?.slice(0, 2000)}`;
     });
 
     if (!response.ok) {
-      const errText = await response.text();
-      console.error('Anthropic API error:', errText);
       return NextResponse.json(
-        { response: `⚠️ AI error (${response.status}). Check your ANTHROPIC_API_KEY.` },
-        { status: 200 }
+        { response: `⚠️ AI error (${response.status}).` },
+        { status: 200 },
       );
     }
 
     const data = await response.json();
     const text = data.content?.[0]?.text || 'No response generated.';
 
-    return NextResponse.json({ response: text });
+    return NextResponse.json({ response: text, mode: 'simple' });
   } catch (err: any) {
-    console.error('GhOKU chat error:', err);
+    console.error('GhOSTface chat error:', err);
     return NextResponse.json(
       { response: `⚠️ Error: ${err.message}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
